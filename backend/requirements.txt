@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+llama-index
+llama-index-vector-stores-qdrant
+llama-index-embeddings-ollama
+llama-index-llms-ollama
+llama-index-postprocessor-sentence-transformer
+python-multipart
+pydantic-settings
+pymupdf
+qdrant-client
