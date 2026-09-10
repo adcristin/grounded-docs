@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     CHUNK_OVERLAP: int = 50
 
     # Reranker Config
-    RERANK_MODEL: str = "BAAI/bge-reranker-base"
+    RERANK_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
     class Config:
         env_file = ".env"
