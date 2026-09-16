@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Citation } from '../api/client';
+import React, { createContext, useContext, useState } from 'react';
+import type { ReactNode } from 'react';
+import type { Citation } from '../api/client';
 
 interface AppState {
   currentModel: 'qwen3:4b' | 'qwen3:8b';

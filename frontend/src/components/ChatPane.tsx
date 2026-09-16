@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Upload, Loader2, AlertCircle } from 'lucide-react';
-import { api, ChatResponse, Citation } from '../api/client';
+import { Send, Loader2, AlertCircle } from 'lucide-react';
+import { api } from '../api/client';
+import type { Citation } from '../api/client';
 import { useApp } from '../context/AppContext';
 import { cn } from '../lib/utils';
 import FileUploadZone from './FileUploadZone';
@@ -34,7 +35,7 @@ const CitationMarker: React.FC<{
 };
 
 const ChatPane: React.FC = () => {
-  const { currentModel, setActiveCitation, setUploadStatus, setLastDebugMetrics } = useApp();
+  const { currentModel, setActiveCitation, setLastDebugMetrics } = useApp();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isPending, setIsPending] = useState(false);
