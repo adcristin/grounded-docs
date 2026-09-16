@@ -4,7 +4,7 @@ llama-index
 llama-index-vector-stores-qdrant
 llama-index-embeddings-ollama
 llama-index-llms-ollama
-llama-index-postprocessor-sentence-transformer
+sentence-transformers
 python-multipart
 pydantic-settings
 pymupdf
