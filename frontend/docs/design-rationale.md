@@ -13,10 +13,8 @@ Grounded Docs is a document-based Q&A assistant designed for high-fidelity groun
 ### 2. Model Selection
 - **Embedding Model**: `embeddinggemma`
   - **Rationale**: Chosen for its strong performance on local benchmarks and efficiency in creating dense vector representations of technical documentation.
-- **Generation Models**: `qwen3:4b` and `qwen3:8b`
-  - **Rationale**: Qwen3 models exhibit strong instruction-following and grounding capabilities. The choice between 4b and 8b allows users to trade off latency for quality:
-    - `4b`: Faster, lower VRAM usage, suitable for simple factual retrieval.
-    - `8b`: Better reasoning and nuance, higher quality citations.
+- **Generation Model**: `qwen3:4b`
+  - **Rationale**: Qwen3 models exhibit strong instruction-following and grounding capabilities. The 4b model provides a great balance of speed, low VRAM usage, and high quality for factual retrieval.
 
 ### 3. Retrieval Thresholding (The Groundedness Gate)
 - **Threshold**: 0.4 (Rerank Score)

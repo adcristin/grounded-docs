@@ -3,11 +3,11 @@ import type { ReactNode } from 'react';
 import type { Citation } from '../api/client';
 
 interface AppState {
-  currentModel: 'qwen3:4b' | 'qwen3:8b';
+  currentModel: 'qwen3:4b';
   activeCitation: Citation | null;
   uploadStatus: 'idle' | 'uploading' | 'success' | 'error';
   lastDebugMetrics: any | null;
-  setCurrentModel: (model: 'qwen3:4b' | 'qwen3:8b') => void;
+  setCurrentModel: (model: 'qwen3:4b') => void;
   setActiveCitation: (citation: Citation | null) => void;
   setUploadStatus: (status: 'idle' | 'uploading' | 'success' | 'error') => void;
   setLastDebugMetrics: (metrics: any) => void;
@@ -16,7 +16,7 @@ interface AppState {
 const AppContext = createContext<AppState | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [currentModel, setCurrentModel] = useState<'qwen3:4b' | 'qwen3:8b'>('qwen3:4b');
+  const [currentModel, setCurrentModel] = useState<'qwen3:4b'>('qwen3:4b');
   const [activeCitation, setActiveCitation] = useState<Citation | null>(null);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [lastDebugMetrics, setLastDebugMetrics] = useState<any | null>(null);

@@ -1,5 +1,13 @@
-# --- claudeplans --- 
+# --- claudeplans ---
 *CLAUDE*
 
-# --- pycahce --- 
-*pycache*/
+# --- python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
+venv/
+build/
+dist/

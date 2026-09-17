@@ -16,19 +16,16 @@ const Layout: React.FC = () => {
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-zinc-500">Model:</span>
           <div className="flex p-1 bg-zinc-100 rounded-lg border border-zinc-200">
-            {(['qwen3:4b', 'qwen3:8b'] as const).map((model) => (
-              <button
-                key={model}
-                onClick={() => setCurrentModel(model)}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
-                  currentModel === model
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-700'
-                }`}
-              >
-                {model}
-              </button>
-            ))}
+            <button
+              onClick={() => setCurrentModel('qwen3:4b')}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                currentModel === 'qwen3:4b'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-zinc-500 hover:text-zinc-700'
+              }`}
+            >
+              qwen3:4b
+            </button>
           </div>
         </div>
       </header>

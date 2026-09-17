@@ -1,7 +1,7 @@
 import logging
 import re
 from typing import List, Dict, Any
-from llama_index.core import VectorStoreIndex, StorageContext
+from llama_index.core import VectorStoreIndex, StorageContext, QueryBundle
 from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.llms.ollama import Ollama
@@ -28,11 +28,9 @@ class RAGService:
         )
 
         # 2. Setup Qdrant Vector Store
-        # We use the storage interface but for LlamaIndex we need the actual VectorStore object
-        self.vector_store = QdrantVectorStore(
-            client=qdrant_client.QdrantClient(url=settings.QDRANT_URL),
-            collection_name=settings.QDRANT_COLLECTION
-        )
+        # We use the storage interface to ensure collection existence and configuration
+        storage = get_vector_store()
+        self.vector_store = storage.vector_store
 
         # 3. Initialize Index
         self.index = VectorStoreIndex.from_vector_store(
@@ -67,23 +65,32 @@ class RAGService:
         Performs the retrieval and reranking pipeline.
         Returns the top candidates and whether they passed the groundedness gate.
         """
-        # Step 1: Initial Retrieval (Wide net)
-        retriever = self.index.as_retriever(similarity_top_k=settings.TOP_K_RETRIEVAL)
-        initial_nodes = retriever.retrieve(user_query)
+        try:
+            # Step 1: Initial Retrieval (Wide net)
+            # Use the embedding model to get the query vector specifically using get_query_embedding
+            query_embedding = self.embed_model.get_query_embedding(user_query)
+
+            # Use the vector store to retrieve nodes using the pre-computed query embedding
+            initial_nodes = self.vector_store.query(query_embedding, similarity_top_k=settings.TOP_K_RETRIEVAL)
+        except Exception as e:
+            logger.error(f"Retrieval error for query {user_query}: {str(e)}")
+            return {"grounded": False, "candidates": [], "logs": {"error": str(e)}}
+            logger.error(f"Retrieval error for query {user_query}: {str(e)}")
+            return {"grounded": False, "candidates": [], "logs": {"error": str(e)}}
 
         if not initial_nodes:
             logger.info(f"Query: {user_query} | Initial retrieval: 0 nodes")
             return {"grounded": False, "candidates": [], "logs": {"initial_count": 0}}
 
         # Log initial cosine similarity scores (approximate)
-        initial_scores = [node.score for node in initial_nodes if hasattr(node, 'score')]
+        initial_scores = [float(node.score) for node in initial_nodes if hasattr(node, 'score')]
         logger.info(f"Query: {user_query} | Initial scores (top 5): {initial_scores[:5]}")
 
         # Step 2: Reranking (Precision filter)
-        reranked_nodes = self.reranker.postprocess_nodes(initial_nodes, query_bundle=user_query)
+        reranked_nodes = self.reranker.postprocess_nodes(initial_nodes, query_bundle=QueryBundle(user_query))
 
         # Step 3: Confidence Thresholding
-        top_score = reranked_nodes[0].score if reranked_nodes else 0
+        top_score = float(reranked_nodes[0].score) if reranked_nodes else 0.0
         logger.info(f"Query: {user_query} | Top reranker score: {top_score}")
 
         if top_score < settings.RETRIEVAL_THRESHOLD:
@@ -91,7 +98,7 @@ class RAGService:
                 "grounded": False,
                 "candidates": [],
                 "logs": {
-                    "initial_top_score": initial_scores[0] if initial_scores else 0,
+                    "initial_top_score": initial_scores[0] if initial_scores else 0.0,
                     "rerank_top_score": top_score
                 }
             }
@@ -102,7 +109,7 @@ class RAGService:
             meta = node.metadata
             candidates.append({
                 "text": node.get_content(),
-                "score": node.score,
+                "score": float(node.score),
                 "metadata": {
                     "source_filename": meta.get('source_filename', 'unknown'),
                     "page_number": meta.get('page_number', 'unknown')

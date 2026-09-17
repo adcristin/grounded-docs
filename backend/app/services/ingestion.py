@@ -46,14 +46,13 @@ class IngestionService:
             text = page_data["text"]
             page_num = page_data["page"]
 
-            # LlamaIndex SentenceSplitter expects a string and returns a list of strings
-            # though it usually operates on Documents. We can use it directly on text.
-            chunks = self.splitter._split_text(text)
+            # LlamaIndex SentenceSplitter provides a public split_text method
+            chunks = self.splitter.split_text(text)
 
             for chunk_text in chunks:
                 all_chunks.append({
                     "text": chunk_text,
-                    "id": f"{doc_id}_{chunk_global_index}",
+                    "id": str(uuid.uuid4()),
                     "metadata": {
                         "doc_id": doc_id,
                         "chunk_index": chunk_global_index,
