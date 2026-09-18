@@ -1,9 +1,8 @@
 import logging
 import re
 from typing import List, Dict, Any
-from llama_index.core import VectorStoreIndex, StorageContext, QueryBundle
+from llama_index.core import VectorStoreIndex, StorageContext, QueryBundle, Settings
 from llama_index.core.postprocessor import SentenceTransformerRerank
-from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.llms.ollama import Ollama
 from llama_index.core.llms import ChatMessage
 from llama_index.vector_stores.qdrant import QdrantVectorStore
@@ -22,10 +21,7 @@ class RAGService:
             base_url=settings.OLLAMA_BASE_URL,
             request_timeout=120.0
         )
-        self.embed_model = OllamaEmbedding(
-            model_name=settings.EMBED_MODEL,
-            base_url=settings.OLLAMA_BASE_URL
-        )
+        self.embed_model = Settings.embed_model
 
         # 2. Setup Qdrant Vector Store
         # We use the storage interface to ensure collection existence and configuration
@@ -70,11 +66,13 @@ class RAGService:
             # Use the embedding model to get the query vector specifically using get_query_embedding
             query_embedding = self.embed_model.get_query_embedding(user_query)
 
-            # Use the vector store to retrieve nodes using the pre-computed query embedding
-            initial_nodes = self.vector_store.query(query_embedding, similarity_top_k=settings.TOP_K_RETRIEVAL)
+            # Wrap the embedding in a QueryBundle as expected by the QdrantVectorStore.query method
+            from llama_index.core import QueryBundle
+            query_bundle = QueryBundle(user_query, embedding=query_embedding)
+
+            # Use the vector store to retrieve nodes using the QueryBundle
+            initial_nodes = self.vector_store.query(query_bundle, similarity_top_k=settings.TOP_K_RETRIEVAL)
         except Exception as e:
-            logger.error(f"Retrieval error for query {user_query}: {str(e)}")
-            return {"grounded": False, "candidates": [], "logs": {"error": str(e)}}
             logger.error(f"Retrieval error for query {user_query}: {str(e)}")
             return {"grounded": False, "candidates": [], "logs": {"error": str(e)}}
 

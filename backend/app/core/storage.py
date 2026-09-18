@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
-from llama_index.core import StorageContext, VectorStoreIndex
+from llama_index.core import StorageContext, VectorStoreIndex, Settings
 from llama_index.vector_stores.qdrant import QdrantVectorStore
-from llama_index.embeddings.ollama import OllamaEmbedding
 import qdrant_client
 from app.core.config import settings
 
@@ -49,14 +48,10 @@ class QdrantStorage(VectorStoreInterface):
 
     def add_chunks(self, chunks: List[Dict[str, Any]]):
         from llama_index.core.schema import TextNode
-        from llama_index.embeddings.ollama import OllamaEmbedding
         import logging
         logger = logging.getLogger(__name__)
 
-        embed_model = OllamaEmbedding(
-            model_name=settings.EMBED_MODEL,
-            base_url=settings.OLLAMA_BASE_URL
-        )
+        embed_model = Settings.embed_model
 
         nodes = [
             TextNode(
