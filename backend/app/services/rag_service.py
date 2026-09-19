@@ -63,15 +63,10 @@ class RAGService:
         """
         try:
             # Step 1: Initial Retrieval (Wide net)
-            # Use the embedding model to get the query vector specifically using get_query_embedding
-            query_embedding = self.embed_model.get_query_embedding(user_query)
-
-            # Wrap the embedding in a QueryBundle as expected by the QdrantVectorStore.query method
-            from llama_index.core import QueryBundle
-            query_bundle = QueryBundle(user_query, embedding=query_embedding)
-
-            # Use the vector store to retrieve nodes using the QueryBundle
-            initial_nodes = self.vector_store.query(query_bundle, similarity_top_k=settings.TOP_K_RETRIEVAL)
+            # Use the LlamaIndex Index retriever instead of calling the vector store directly.
+            # This handles embeddings and QueryBundles automatically.
+            retriever = self.index.as_retriever(similarity_top_k=settings.TOP_K_RETRIEVAL)
+            initial_nodes = retriever.retrieve(user_query)
         except Exception as e:
             logger.error(f"Retrieval error for query {user_query}: {str(e)}")
             return {"grounded": False, "candidates": [], "logs": {"error": str(e)}}

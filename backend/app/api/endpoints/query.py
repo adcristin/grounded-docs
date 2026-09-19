@@ -2,15 +2,20 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
+from functools import lru_cache
 from app.services.rag_service import RAGService
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# We'll use a simple global instance for the RAGService to avoid reloading models on every request
-# In a larger app, we'd use a proper dependency injection container or a singleton.
-rag_service = RAGService()
+@lru_cache
+def get_rag_service():
+    """
+    Provides a singleton instance of RAGService.
+    Using lru_cache ensures the service (and its models) are only loaded once.
+    """
+    return RAGService()
 
 class QueryRequest(BaseModel):
     query: str
@@ -34,7 +39,7 @@ class ChatResponse(BaseModel):
     debug: Dict[str, Any]
 
 @router.post("/retrieve", response_model=RetrieveResponse)
-async def retrieve_context(request: QueryRequest):
+async def retrieve_context(request: QueryRequest, rag_service: RAGService = Depends(get_rag_service)):
     try:
         result = await rag_service.retrieve(request.query)
         return result
@@ -42,7 +47,7 @@ async def retrieve_context(request: QueryRequest):
         raise HTTPException(status_code=500, detail=f"Retrieval failed: {str(e)}")
 
 @router.post("/query", response_model=QueryResponse)
-async def ask_question(request: QueryRequest):
+async def ask_question(request: QueryRequest, rag_service: RAGService = Depends(get_rag_service)):
     try:
         result = await rag_service.query(request.query)
         return result
@@ -50,7 +55,7 @@ async def ask_question(request: QueryRequest):
         raise HTTPException(status_code=500, detail=f"Query failed: {str(e)}")
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat_with_docs(request: ChatRequest):
+async def chat_with_docs(request: ChatRequest, rag_service: RAGService = Depends(get_rag_service)):
     try:
         result = await rag_service.chat(request.query, model=request.model)
         return result

@@ -1,20 +1,21 @@
+from llama_index.core import Settings
+from llama_index.embeddings.ollama import OllamaEmbedding
+from app.core.config import settings
+
+# Initialize Global Embedding Model at the very top to prevent import-order bugs
+Settings.embed_model = OllamaEmbedding(
+    model_name=settings.EMBED_MODEL,
+    base_url=settings.OLLAMA_BASE_URL
+)
+
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.endpoints import upload, query
-from llama_index.core import Settings
-from llama_index.embeddings.ollama import OllamaEmbedding
-from app.core.config import settings
 from app.core.storage import get_vector_store
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize Global Embedding Model
-    Settings.embed_model = OllamaEmbedding(
-        model_name=settings.EMBED_MODEL,
-        base_url=settings.OLLAMA_BASE_URL
-    )
-
     # Ensure Qdrant collection is created with correct config
     try:
         get_vector_store()
