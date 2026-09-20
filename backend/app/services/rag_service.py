@@ -16,10 +16,12 @@ logger = logging.getLogger(__name__)
 class RAGService:
     def __init__(self):
         # 1. Setup LLM and Embedding models via Ollama
+        # Limit context window to prevent OOM (qwen3:4b has 262K default which needs ~37GB KV cache)
         self.llm = Ollama(
             model=settings.LLM_MODEL,
             base_url=settings.OLLAMA_BASE_URL,
-            request_timeout=120.0
+            request_timeout=300.0,
+            additional_kwargs={"num_ctx": 4096}
         )
         self.embed_model = Settings.embed_model
 
@@ -162,10 +164,12 @@ class RAGService:
 
         # 3. Grounded Generation
         # Use the specific model for this request
+        # Limit context window to prevent OOM (qwen3:4b has 262K default which needs ~37GB KV cache)
         llm = Ollama(
             model=selected_model,
             base_url=settings.OLLAMA_BASE_URL,
-            request_timeout=120.0
+            request_timeout=300.0,
+            additional_kwargs={"num_ctx": 4096}
         )
 
         prompt_data = self._build_chat_prompt(user_query, context_str)

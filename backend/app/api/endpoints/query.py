@@ -66,8 +66,38 @@ async def chat_with_docs(request: ChatRequest, rag_service: RAGService = Depends
 @router.get("/debug-retrieve")
 async def debug_retrieve(query: str, rag_service: RAGService = Depends(get_rag_service)):
     from llama_index.core import QueryBundle
+    import qdrant_client
+    
+    # 1. Confirm collection name
+    collection_name = rag_service.vector_store.collection_name
+    print(f"[DEBUG] Collection name: {collection_name}")
+    
+    # 2. Confirm Qdrant client host/port
+    qdrant_client_instance = rag_service.vector_store.client
+    # Get the URL from the client's internal config
+    qdrant_url = getattr(qdrant_client_instance, '_base_url', None) or getattr(qdrant_client_instance, 'url', None) or str(qdrant_client_instance)
+    print(f"[DEBUG] Qdrant client URL: {qdrant_url}")
+    
+    # 3. Get query embedding and print first few values
+    embed_model = rag_service.embed_model
+    query_embedding = embed_model.get_query_embedding(query)
+    print(f"[DEBUG] Query embedding (first 5 values): {query_embedding[:5] if query_embedding else 'None'}")
+    print(f"[DEBUG] Query embedding length: {len(query_embedding) if query_embedding else 0}")
+    
+    # 4. Check retriever configuration for any filters
     retriever = rag_service.index.as_retriever(similarity_top_k=5)
+    print(f"[DEBUG] Retriever similarity_top_k: {retriever.similarity_top_k}")
+    print(f"[DEBUG] Retriever type: {type(retriever)}")
+    print(f"[DEBUG] Retriever attributes: {[attr for attr in dir(retriever) if not attr.startswith('_')]}")
+    
+    # 5. Try with the real query
     initial_nodes = retriever.retrieve(query)
+    print(f"[DEBUG] Initial nodes count for '{query}': {len(initial_nodes)}")
+    
+    # 6. Try with generic word "the" to rule out relevance filtering
+    generic_query = "the"
+    generic_nodes = retriever.retrieve(generic_query)
+    print(f"[DEBUG] Initial nodes count for 'the': {len(generic_nodes)}")
     
     initial_results = []
     for node in initial_nodes[:3]:
@@ -80,8 +110,24 @@ async def debug_retrieve(query: str, rag_service: RAGService = Depends(get_rag_s
     for node in reranked_nodes[:3]:
         reranked_results.append({"score": float(node.score), "text": node.get_content()})
 
+    # Also get generic query results for comparison
+    generic_results = []
+    for node in generic_nodes[:3]:
+        generic_results.append({"score": float(node.score), "text": node.get_content()})
+
     return {
         "query": query,
+        "debug": {
+            "collection_name": collection_name,
+            "qdrant_url": str(qdrant_url),
+            "query_embedding_sample": [float(x) for x in query_embedding[:5]] if query_embedding else None,
+            "query_embedding_dim": len(query_embedding) if query_embedding else 0,
+            "retriever_similarity_top_k": retriever.similarity_top_k,
+            "retriever_type": str(type(retriever)),
+            "initial_nodes_count_real_query": len(initial_nodes),
+            "initial_nodes_count_generic_query": len(generic_nodes),
+        },
         "initial": initial_results,
+        "generic_query_results": generic_results,
         "reranked": reranked_results
     }
