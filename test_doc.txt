@@ -1,1 +1,0 @@
-The Grounded Docs system is a high-precision RAG assistant. It uses Qdrant for vector storage and Ollama for local LLM execution. The secret code for the test is GOLDEN-GECKO-42.

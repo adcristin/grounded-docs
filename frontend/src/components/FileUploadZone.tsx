@@ -1,6 +1,6 @@
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, File, X, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, File, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { api } from '../api/client';
 import { useApp } from '../context/AppContext';
 import { cn } from '../lib/utils';

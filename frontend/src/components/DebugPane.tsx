@@ -1,14 +1,7 @@
-import React, { useState } from 'react';
-import { ChevronUp, ChevronDown, Activity, ShieldCheck, ShieldAlert, Database } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronUp, ChevronDown, Activity, ShieldCheck, Database } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { cn } from '../lib/utils';
-
-interface DebugMetrics {
-  grounded: boolean;
-  initial_top_score: number;
-  rerank_top_score: number;
-  chunk_count: number;
-}
 
 const DebugPane: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
