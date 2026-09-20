@@ -21,3 +21,9 @@ async def debug_retrieve(query: str, rag_service: RAGService = Depends(get_rag_s
         "initial": initial_results,
         "reranked": reranked_results
     }
+
+@router.get("/debug-collection-count")
+async def debug_collection_count(rag_service: RAGService = Depends(get_rag_service)):
+    client = rag_service.vector_store.client
+    collection_info = client.get_collection(collection_name=rag_service.vector_store.collection_name)
+    return {"collection": rag_service.vector_store.collection_name, "points_count": collection_info.points_count}
