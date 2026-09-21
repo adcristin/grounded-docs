@@ -35,7 +35,7 @@ Upload
 | **Frontend** | React 19 + Vite + TypeScript + Tailwind CSS 4 + shadcn/ui (Radix UI) | Three-pane layout: Chat, Source, Debug |
 | **Vector Store** | Qdrant | Runs in Docker, COSINE distance, 768-dim vectors |
 | **Embeddings** | `embeddinggemma` via Ollama | Local, no API key |
-| **Generation** | `qwen3:4b` via Ollama | Local, swappable to `qwen3:8b` via model selector |
+| **Generation** | `qwen3:4b` via Ollama | 
 | **Reranker** | `sentence-transformers` CrossEncoder (`cross-encoder/ms-marco-MiniLM-L-6-v2`) | Runs on CPU |
 | **Orchestration** | LlamaIndex | Ingestion, indexing, retrieval, reranking |
 
@@ -108,9 +108,9 @@ npm run dev
 ### Calibration findings (real sweep numbers)
 | Category | Reranker score range | Notes |
 |----------|---------------------|-------|
-| **Positive** (answer present) | **~ -2.9 to +9.5** | Overlaps with hard negatives |
-| **Hard negative** (topically related, answer absent) | **~ -0.5 to +5.8** | Overlaps with positives |
-| **True negative** (completely unrelated) | **~ -11.0 to -11.2** | Clearly separated |
+| **Positive** (answer present) | **-2.9 to +9.5** | Overlaps with hard negatives |
+| **Hard negative** (topically related, answer absent) | **-0.5 to +5.8** | Overlaps with positives |
+| **True negative** (completely unrelated) | **-11.0 to -11.2** | Clearly separated |
 
 **Key takeaway**: The reranker score **alone cannot distinguish hard negatives from positives**. Their score distributions overlap substantially.
 
@@ -125,7 +125,7 @@ npm run dev
 
 1. **Chunk boundary splits** — A fact can be split across two chunks; 50-token overlap mitigates but doesn't eliminate this.
 2. **Calibration scope** — Reranker calibration was validated on a **small single-chunk test document** (the NIST/cloud-computing fixture used in `validation_results.json`). Behavior on longer, multi-page corpora may differ.
-3. **Local model quality** — `qwen3:4b` response quality is a step below larger hosted models. `qwen3:8b` is available as a drop-in upgrade (selectable in the UI) at the cost of latency and VRAM.
+3. **Local model quality** — `qwen3:4b` response quality is a step below larger hosted models.
 4. **No OCR** — Only PDFs with extractable text and plain `.txt` files are supported. Scanned/image-only PDFs will fail extraction.
 5. **Citation parsing** — The parser expects `[1]`, `[2]` numeric markers. If the LLM deviates (e.g., `[Source: ...]`), those citations won't be validated or linked in the Source pane.
 
