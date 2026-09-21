@@ -1,11 +1,5 @@
 # GroundedDocs
 
-A document-based Q&A assistant that answers strictly from uploaded documents and refuses to answer when the retrieved content doesn't actually support a response.
-
----
-
-## Overview
-
 GroundedDocs lets you upload PDF or plain-text documents, ask questions, and receive grounded answers with source-mapped citations. Its core design principle is a **two-layer defense against hallucination**: a retrieval-level groundedness gate that blocks obviously irrelevant queries using a cross-encoder reranker score threshold, plus a strict generation-level prompt that refuses to answer when the retrieved chunk doesn't contain the actual fact asked—even if it passed the retrieval gate.
 
 ---
