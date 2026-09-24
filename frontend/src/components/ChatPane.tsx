@@ -117,7 +117,7 @@ const ChatPane: React.FC = () => {
         </div>
       );
     }
-    return <p className="text-sm text-zinc-600">{msg.content}</p>;
+    return <p className="text-sm text-white">{msg.content}</p>;
   };
 
   return (
@@ -180,29 +180,29 @@ const ChatPane: React.FC = () => {
 
       {/* Input Area */}
       <div className="p-6 border-t border-zinc-100 bg-white">
-        <div className="relative max-w-4xl mx-auto">
-          <textarea
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSend();
-              }
-            }}
-            placeholder="Ask a question..."
-            className="w-full pl-4 pr-12 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none h-14"
-            rows={1}
-            disabled={isPending}
-          />
-          <button
-            onClick={handleSend}
-            disabled={!inputValue.trim() || isPending}
-            className="absolute right-2 top-2 p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-zinc-300 disabled:cursor-not-allowed transition-all"
-          >
-            {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-          </button>
-        </div>
+          <div className="relative max-w-4xl mx-auto flex items-center">
+            <textarea
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              placeholder="Ask a question..."
+              className="w-full pl-4 pr-12 py-3 bg-zinc-50 border border-zinc-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none h-14"
+              rows={1}
+              disabled={isPending}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!inputValue.trim() || isPending}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-zinc-300 disabled:cursor-not-allowed transition-all"
+            >
+              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            </button>
+          </div>
         <p className="text-[10px] text-center text-zinc-400 mt-3">
           Grounded answers only. All claims are cited from source chunks.
         </p>

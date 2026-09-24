@@ -1,7 +1,7 @@
 import logging
 import re
 from typing import List, Dict, Any
-from llama_index.core import VectorStoreIndex, StorageContext, QueryBundle, Settings
+from llama_index.embeddings.ollama import OllamaEmbedding
 from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.llms.ollama import Ollama
 from llama_index.core.llms import ChatMessage
@@ -23,7 +23,11 @@ class RAGService:
             request_timeout=300.0,
             additional_kwargs={"num_ctx": 4096}
         )
-        self.embed_model = Settings.embed_model
+        self.embed_model = OllamaEmbedding(
+            model_name=settings.EMBED_MODEL,
+            base_url=settings.OLLAMA_BASE_URL,
+            embed_batch_size=10
+        )
 
         # 2. Setup Qdrant Vector Store
         # We use the storage interface to ensure collection existence and configuration
