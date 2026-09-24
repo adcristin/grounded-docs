@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     QDRANT_COLLECTION: str = "grounded_docs"
 
     # RAG Params
-    RETRIEVAL_THRESHOLD: float = -5.0
+    RETRIEVAL_THRESHOLD: float = -8.0
     TOP_K_RETRIEVAL: int = 20  # Fetch more for the reranker
     TOP_K_RERANK: int = 5      # Pass only the best to the LLM
     CHUNK_SIZE: int = 500

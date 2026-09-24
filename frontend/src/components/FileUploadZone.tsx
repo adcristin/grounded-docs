@@ -6,7 +6,7 @@ import { useApp } from '../context/AppContext';
 import { cn } from '../lib/utils';
 
 const FileUploadZone: React.FC<{ onUploadSuccess?: () => void }> = ({ onUploadSuccess }) => {
-  const { uploadStatus, setUploadStatus } = useApp();
+  const { uploadStatus, setUploadStatus, activeDocument, setActiveDocument, isFirstQuestionAsked } = useApp();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -30,15 +30,16 @@ const FileUploadZone: React.FC<{ onUploadSuccess?: () => void }> = ({ onUploadSu
     setErrorMessage(null);
 
     try {
-      await api.uploadDocument(selectedFile);
+      const response = await api.uploadDocument(selectedFile);
       setUploadStatus('success');
-      if (onUploadSuccess) onUploadSuccess();
 
-      // Reset after 3 seconds
-      setTimeout(() => {
-        setUploadStatus('idle');
-        setSelectedFile(null);
-      }, 3000);
+      // Update active document state from backend response
+      setActiveDocument({
+        filename: selectedFile.name,
+        pointCount: response.data.total_chunks
+      });
+
+      if (onUploadSuccess) onUploadSuccess();
     } catch (error: any) {
       console.error('Upload error:', error);
       setUploadStatus('error');
@@ -50,6 +51,27 @@ const FileUploadZone: React.FC<{ onUploadSuccess?: () => void }> = ({ onUploadSu
     setSelectedFile(null);
     setErrorMessage(null);
   };
+
+  if (activeDocument) {
+    return (
+      <div className="w-full max-w-lg mx-auto p-6 text-center">
+        <div className="p-6 bg-green-600 border border-green-700 rounded-2xl shadow-sm">
+          <div className="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center mx-auto mb-4">
+            <File className="w-6 h-6" />
+          </div>
+          <h3 className="text-sm font-semibold text-white mb-1">
+            Active Document: {activeDocument.filename}
+          </h3>
+          <p className="text-xs text-green-50 mb-4">
+            Indexed with {activeDocument.pointCount} chunks
+          </p>
+          <div className="text-[10px] text-green-100/80 italic">
+            Refresh the page to upload a different document
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-lg mx-auto p-6">
@@ -112,10 +134,10 @@ const FileUploadZone: React.FC<{ onUploadSuccess?: () => void }> = ({ onUploadSu
         </div>
       )}
 
-      {uploadStatus === 'success' && (
+      {uploadStatus === 'success' && !isFirstQuestionAsked && (
         <div className="mt-4 p-3 bg-green-50 border border-green-200 text-green-800 rounded-xl flex items-center gap-3 text-xs font-medium">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
-          Document processed successfully!
+          Document successfully uploaded for indexing!
         </div>
       )}
 

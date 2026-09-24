@@ -11,7 +11,7 @@ Settings.embed_model = OllamaEmbedding(
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.endpoints import upload, query
+from app.api.endpoints import upload, query, status
 from app.core.storage import get_vector_store
 
 @asynccontextmanager
@@ -41,6 +41,7 @@ app.add_middleware(
 # Include routers
 app.include_router(upload.router, prefix="/api", tags="Documents")
 app.include_router(query.router, prefix="/api", tags="Query")
+app.include_router(status.router, prefix="/api", tags="System")
 
 @app.get("/health")
 async def health_check():

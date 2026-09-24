@@ -40,6 +40,11 @@ export interface ChatResponse {
   debug: ChatDebug;
 }
 
+export interface StatusResponse {
+  active_document: string | null;
+  point_count: number;
+}
+
 export const api = {
   async uploadDocument(file: File): Promise<UploadResponse> {
     const formData = new FormData();
@@ -55,6 +60,16 @@ export const api = {
 
   async chat(request: ChatRequest): Promise<ChatResponse> {
     const response = await apiClient.post('/api/chat', request);
+    return response.data;
+  },
+
+  async getStatus(): Promise<StatusResponse> {
+    const response = await apiClient.get('/api/status');
+    return response.data;
+  },
+
+  async clearCollection(): Promise<{ status: string; message: string }> {
+    const response = await apiClient.post('/api/clear');
     return response.data;
   },
 };

@@ -14,7 +14,7 @@ Upload
   → Qdrant vector store (COSINE, 768-dim)
   → top-k retrieval (k=20)
   → cross-encoder reranking (ms-marco-MiniLM-L-6-v2)
-  → groundedness gate (reranker score ≥ -5.0)
+  → groundedness gate (reranker score ≥ -8.0)
   → qwen3:4b generation (Ollama, local) with strict context-only prompting
   → citation parsing ([n] markers → source filename + page)
   → response with citations
@@ -57,7 +57,7 @@ Create a `.env` file in the project root (or rely on defaults in `backend/app/co
 | `EMBED_MODEL` | `embeddinggemma` |
 | `QDRANT_URL` | `http://localhost:6333` |
 | `QDRANT_COLLECTION` | `grounded_docs` |
-| `RETRIEVAL_THRESHOLD` | `-5.0` |
+| `RETRIEVAL_THRESHOLD` | `-8.0` |
 | `TOP_K_RETRIEVAL` | `20` |
 | `TOP_K_RERANK` | `5` |
 | `CHUNK_SIZE` | `500` |
@@ -109,7 +109,7 @@ npm run dev
 **Key takeaway**: The reranker score **alone cannot distinguish hard negatives from positives**. Their score distributions overlap substantially.
 
 ### Two-layer design (why not a single threshold?)
-- The retrieval-level threshold (`RETRIEVAL_THRESHOLD = -5.0`) is **intentionally loose**—calibrated only to filter obvious irrelevance (true negatives). It lets through hard negatives because no safe single threshold separates them from positives.
+- The retrieval-level threshold (`RETRIEVAL_THRESHOLD = -8.0`) is **intentionally loose**—calibrated only to filter obvious irrelevance (true negatives). It lets through hard negatives because no safe single threshold separates them from positives.
 - The **strict generation-level prompt** is the actual enforcement mechanism for fact-level grounding. It instructs the LLM to respond `"Insufficient context to answer the question."` when the retrieved chunks don't contain the fact, regardless of reranker score.
 - This separation is more honest and robust: the reranker does what it's good at (topical filtering), the LLM does what it's good at (fact verification), and the system doesn't pretend a single scalar can do both.
 
@@ -122,6 +122,11 @@ npm run dev
 3. **Local model quality** — `qwen3:4b` response quality is a step below larger hosted models.
 4. **No OCR** — Only PDFs with extractable text and plain `.txt` files are supported. Scanned/image-only PDFs will fail extraction.
 5. **Citation parsing** — The parser expects `[1]`, `[2]` numeric markers. If the LLM deviates (e.g., `[Source: ...]`), those citations won't be validated or linked in the Source pane.
+6. **Dilution in dense chunks** — A lightweight cross-encoder reranker (cross-encoder/ms-marco-MiniLM-L-6-v2) can inconsistently surface short, specific facts (e.g., a person's school name) when that fact is buried inside a large, topically dense chunk that mixes many unrelated subjects (e.g., a resume chunk combining technical skills, certifications, and personal details in one block). This was observed and confirmed via the retrieval debug panel during testing — the correct chunk was retrieved but scored below the groundedness threshold due to dilution from surrounding unrelated content, causing a correct 'Insufficient context' refusal rather than a wrong answer.
+
+   This is a resolvable issue with smaller, more granular chunking tailored to structured documents (e.g., splitting a resume by section rather than by a fixed token count), which was out of scope given this build's timeline. The retrieval threshold was deliberately not tuned further to compensate for this specific case, since doing so would reduce the system's margin against genuinely irrelevant queries — the project prioritizes avoiding false positives (hallucinated answers) over avoiding false negatives (over-cautious refusals).
+7. **Document Scope** — The app is single-document-scoped: uploading a new document replaces any prior document, and refreshing the page clears all current state.
+8. **Local-only Stack** — The system is designed as a zero-cost, local-only stack using Ollama models and Qdrant in Docker; it does not support or require external API keys.
 
 ---
 

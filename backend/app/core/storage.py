@@ -63,8 +63,17 @@ class QdrantStorage(VectorStoreInterface):
         ]
 
         try:
-            # Manually embed the nodes
-            embeddings = embed_model.get_text_embedding_batch([node.get_content() for node in nodes])
+            # Log details of each chunk to identify potential trigger for crashes
+            for i, node in enumerate(nodes):
+                text = node.get_content()
+                logger.info(f"Embedding chunk {i} | Length: {len(text)} chars | Preview: {text[:100]}...")
+
+            # Manually embed the nodes individually to isolate batch issues
+            embeddings = []
+            for node in nodes:
+                emb = embed_model.get_text_embedding(node.get_content())
+                embeddings.append(emb)
+
             for node, emb in zip(nodes, embeddings):
                 node.embedding = emb
 
@@ -91,13 +100,44 @@ class QdrantStorage(VectorStoreInterface):
         ]
 
     def clear(self):
-        self.client.delete_collection(collection_name=settings.QDRANT_COLLECTION)
+        """Fully clear the collection by deleting and recreating it."""
+        try:
+            self.client.delete_collection(collection_name=settings.QDRANT_COLLECTION)
+        except qdrant_client.http.exceptions.UnexpectedResponse as e:
+            if "Not found" not in str(e):
+                raise e
+
         self.client.create_collection(
             collection_name=settings.QDRANT_COLLECTION,
             vectors_config=qdrant_client.models.VectorParams(size=768, distance=qdrant_client.models.Distance.COSINE)
         )
 
-# Dependency Injection point
+    def get_status(self) -> Dict[str, Any]:
+        """Returns the current point count and the filename of the active document."""
+        try:
+            collection_info = self.client.get_collection(collection_name=settings.QDRANT_COLLECTION)
+            point_count = collection_info.points_count
+
+            if point_count == 0:
+                return {"active_document": None, "point_count": 0}
+
+            # Retrieve the first point to get the source_filename from metadata
+            points = self.client.scroll(
+                collection_name=settings.QDRANT_COLLECTION,
+                limit=1,
+                with_payload=True
+            )[0]
+
+            filename = None
+            if points:
+                payload = points[0].payload
+                filename = payload.get("source_filename")
+
+            return {"active_document": filename, "point_count": point_count}
+        except qdrant_client.http.exceptions.UnexpectedResponse as e:
+            if "Not found" in str(e):
+                return {"active_document": None, "point_count": 0}
+            raise e
 _storage_instance = None
 
 def get_vector_store() -> VectorStoreInterface:

@@ -18,7 +18,14 @@ async def upload_document(
     if not content:
         raise HTTPException(status_code=400, detail="File is empty")
 
-    # 2. Ingestion
+    # 2. Atomic Reset and Ingestion
+    # We clear the collection first to ensure only one document is active.
+    # This implements the global clear-on-upload requirement.
+    try:
+        storage.clear()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to clear existing collection: {str(e)}")
+
     service = IngestionService(
         storage=storage,
         chunk_size=settings.CHUNK_SIZE if hasattr(settings, 'CHUNK_SIZE') else 500,
@@ -33,7 +40,10 @@ async def upload_document(
             "data": result
         }
     except ValueError as e:
+        # If extraction fails, the collection is already cleared, which is the desired state.
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        # In a real app, log this properly
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        # Log that the ingestion failed and the collection is left empty.
+        # In a real app, use a proper logger here.
+        print(f"Ingestion failed for {file.filename}: {str(e)}. Collection left empty.")
+        raise HTTPException(status_code=500, detail=f"Internal server error during ingestion: {str(e)}")

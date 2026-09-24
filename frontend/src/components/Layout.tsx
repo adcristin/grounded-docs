@@ -1,11 +1,32 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ChatPane from './ChatPane';
 import SourcePane from './SourcePane';
 import DebugPane from './DebugPane';
 import { useApp } from '../context/AppContext';
+import { api } from '../api/client';
 
 const Layout: React.FC = () => {
-  const { currentModel, setCurrentModel } = useApp();
+  const { currentModel, setCurrentModel, setActiveDocument, setUploadStatus } = useApp();
+
+  useEffect(() => {
+    const initSession = async () => {
+      try {
+        // Enforce "Reset on Load" requirement
+        await api.clearCollection();
+
+        // Sync status (should be empty now)
+        const status = await api.getStatus();
+        setActiveDocument(status.active_document ? {
+          filename: status.active_document,
+          pointCount: status.point_count
+        } : null);
+      } catch (error) {
+        console.error('Session initialization failed:', error);
+      }
+    };
+
+    initSession();
+  }, [setActiveDocument]);
 
   return (
     <div className="flex flex-col h-screen w-screen bg-zinc-50 text-zinc-900 overflow-hidden">

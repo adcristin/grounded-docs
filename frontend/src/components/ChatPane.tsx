@@ -35,7 +35,7 @@ const CitationMarker: React.FC<{
 };
 
 const ChatPane: React.FC = () => {
-  const { currentModel, setActiveCitation, setLastDebugMetrics } = useApp();
+  const { currentModel, setActiveCitation, setLastDebugMetrics, activeDocument, setIsFirstQuestionAsked } = useApp();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isPending, setIsPending] = useState(false);
@@ -46,6 +46,11 @@ const ChatPane: React.FC = () => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Reset chat history when active document changes or is cleared
+  useEffect(() => {
+    setMessages([]);
+  }, [activeDocument]);
 
   const handleSend = async () => {
     if (!inputValue.trim() || isPending) return;
@@ -60,6 +65,9 @@ const ChatPane: React.FC = () => {
     try {
       const response = await api.chat({ query: userQuery, model: currentModel });
       setLastDebugMetrics(response.debug);
+
+      // Mark first question as asked to dismiss success message
+      setIsFirstQuestionAsked(true);
 
       const assistantMsg: Message = {
         role: 'assistant',

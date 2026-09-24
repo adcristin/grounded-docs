@@ -7,10 +7,14 @@ interface AppState {
   activeCitation: Citation | null;
   uploadStatus: 'idle' | 'uploading' | 'success' | 'error';
   lastDebugMetrics: any | null;
+  activeDocument: { filename: string; pointCount: number } | null;
+  isFirstQuestionAsked: boolean;
   setCurrentModel: (model: 'qwen3:4b') => void;
   setActiveCitation: (citation: Citation | null) => void;
   setUploadStatus: (status: 'idle' | 'uploading' | 'success' | 'error') => void;
   setLastDebugMetrics: (metrics: any) => void;
+  setActiveDocument: (doc: { filename: string; pointCount: number } | null) => void;
+  setIsFirstQuestionAsked: (asked: boolean) => void;
 }
 
 const AppContext = createContext<AppState | undefined>(undefined);
@@ -20,6 +24,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [activeCitation, setActiveCitation] = useState<Citation | null>(null);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [lastDebugMetrics, setLastDebugMetrics] = useState<any | null>(null);
+  const [activeDocument, setActiveDocument] = useState<{ filename: string; pointCount: number } | null>(null);
+  const [isFirstQuestionAsked, setIsFirstQuestionAsked] = useState(false);
 
   return (
     <AppContext.Provider
@@ -32,6 +38,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setUploadStatus,
         lastDebugMetrics,
         setLastDebugMetrics,
+        activeDocument,
+        setActiveDocument,
+        isFirstQuestionAsked,
+        setIsFirstQuestionAsked,
       }}
     >
       {children}
